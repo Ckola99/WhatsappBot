@@ -1,0 +1,24 @@
+{
+  "name": "nodejs-bot",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "test": "jest"
+  },
+  "keywords": [],
+  "author": "Christopher Kola",
+  "license": "ISC",
+  "type": "commonjs",
+  "description": "Whatsapp chatbot js runtime",
+  "dependencies": {
+    "@whiskeysockets/baileys": "^6.7.18",
+    "axios": "^1.10.0",
+    "express": "^5.1.0",
+    "qrcode-terminal": "^0.12.0"
+  },
+  "devDependencies": {
+    "jest": "^30.0.4",
+    "supertest": "^7.1.1"
+  }
+}
