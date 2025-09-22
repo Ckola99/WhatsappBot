@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from pydantic import BaseModel
 from typing import Optional
-from google_sync import sync_contact
+from .google_sync import sync_contact
 from datetime import datetime, timedelta
 
 app = FastAPI()
