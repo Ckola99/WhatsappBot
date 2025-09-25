@@ -11,6 +11,8 @@ const path = require('path');
 const fs = require('fs-extra');
 const { saveContact, getContact, setBotEnabled, setConversationState, setNextFollowup, fetchContactsForFollowup } = require('./db');
 const { isEnabled, enableBot, disableBot, isAdmin } = require('./botState');
+const qrcode = require('qrcode');
+let latestQr = null;
 
 const FOLLOWUP_HOURS = 24;
 
@@ -154,11 +156,11 @@ async function startWhatsAppBot() {
 	});
 
 	// connection update: show qr, handle reconnect logic. Keep reconnect but avoid stacking timers.
-	sock.ev.on('connection.update', (update) => {
+	sock.ev.on('connection.update', async (update) => {
 		const { connection, lastDisconnect, qr } = update;
 		if (qr) {
 			console.log('\n📲 Scan this QR Code with WhatsApp:');
-			require('qrcode-terminal').generate(qr, { small: true });
+			latestQr = await qrcode.toDataURL(qr);
 		}
 
 		if (connection === 'close') {
@@ -183,4 +185,9 @@ async function startWhatsAppBot() {
 	return sock;
 }
 
-module.exports = { startWhatsAppBot };
+// expose getter so FastAPI can fetch it
+function getLatestQr() {
+	return latestQr;
+}
+
+module.exports = { startWhatsAppBot, getLatestQr }
