@@ -61,8 +61,13 @@ async function startWhatsAppBot() {
 		const msg = messages[0];
 		if (!msg || !msg.message) return;
 
-		const fromMe = !!msg.key.fromMe; // message sent by the connected WhatsApp account
 		const remoteJid = msg.key.remoteJid;
+		if (remoteJid.endsWith('@g.us')) {
+			console.log(`Ignored message from group: ${remoteJid}`);
+			return;
+		}
+
+		const fromMe = !!msg.key.fromMe; // message sent by the connected WhatsApp account
 		const text = (msg.message?.conversation || msg.message?.extendedTextMessage?.text || '').trim();
 
 		// If the connected account (owner) sends commands from within a chat, process per-conversation commands
@@ -71,48 +76,47 @@ async function startWhatsAppBot() {
 			const lower = text.toLowerCase();
 			if (lower === '/bot off' || lower === '/bot pause') {
 				setBotEnabled(remoteJid, 0);
-				await sock.sendMessage(remoteJid, { text: '🤖 Bot paused for this conversation. You can reply directly — the bot will not auto-reply here.' });
+				await sock.sendMessage(remoteJid, { text: 'Bot paused for this conversation. You can reply directly — the bot will not auto-reply here.' });
 				console.log(`Owner paused bot for ${remoteJid}`);
 				return;
 			}
 			if (lower === '/bot on' || lower === '/bot resume') {
 				setBotEnabled(remoteJid, 1);
-				await sock.sendMessage(remoteJid, { text: '✅ Bot resumed for this conversation.' });
+				await sock.sendMessage(remoteJid, { text: 'Bot resumed for this conversation.' });
 				console.log(`Owner resumed bot for ${remoteJid}`);
 				return;
 			}
-			// you can add owner-only commands here
 			return;
 		}
 
 		// At this point message is incoming (not from owner)
-		console.log(`📥 New message from ${remoteJid}: ${text}`);
+		console.log(`New message from ${remoteJid}: ${text}`);
 
 		// Admin (remote) control for global toggle: allow ADMIN_PHONE to send /stop /start
 		if (isAdmin(remoteJid)) {
 			const lower = text.toLowerCase();
 			if (lower === '/stop') {
 				disableBot();
-				await sock.sendMessage(remoteJid, { text: "🤖 Bot has been stopped globally." });
+				await sock.sendMessage(remoteJid, { text: "Bot has been stopped globally." });
 				return;
 			}
 			if (lower === '/start') {
 				enableBot();
-				await sock.sendMessage(remoteJid, { text: "✅ Bot is now active globally." });
+				await sock.sendMessage(remoteJid, { text: "Bot is now active globally." });
 				return;
 			}
 		}
 
 		// Check global enable
 		if (!isEnabled()) {
-			console.log("❌ Bot is disabled globally. Ignoring incoming message.");
+			console.log("Bot is disabled globally. Ignoring incoming message.");
 			return;
 		}
 
 		// Check per-contact enabled flag
 		const contact = getContact(remoteJid);
 		if (contact && contact.bot_enabled === 0) {
-			console.log(`❌ Bot is paused for ${remoteJid}. Ignoring.`);
+			console.log(`Bot is paused for ${remoteJid}. Ignoring.`);
 			return;
 		}
 
@@ -143,9 +147,9 @@ async function startWhatsAppBot() {
 				setNextFollowup(remoteJid, null);
 			}
 
-			console.log(`📤 Replied to ${remoteJid}: ${reply}`);
+			console.log(`Replied to ${remoteJid}: ${reply}`);
 		} catch (error) {
-			console.error('❌ Error contacting AI service:', error?.message || error);
+			console.error('Error contacting AI service:', error?.message || error);
 			// Tell user we failed
 			try {
 				await sock.sendMessage(remoteJid, { text: 'Oops — there was an error on the server. Please try again later.' });
@@ -159,7 +163,7 @@ async function startWhatsAppBot() {
 	sock.ev.on('connection.update', async (update) => {
 		const { connection, lastDisconnect, qr } = update;
 		if (qr) {
-			console.log('\n📲 Scan this QR Code with WhatsApp:');
+			console.log('\n Scan this QR Code with WhatsApp:');
 			latestQr = await qrcode.toDataURL(qr);
 		}
 
@@ -178,7 +182,7 @@ async function startWhatsAppBot() {
 				setTimeout(() => startWhatsAppBot().catch(e => console.error('reconnect error', e)), 2000);
 			}
 		} else if (connection === 'open') {
-			console.log('✅ WhatsApp connection established!');
+			console.log('WhatsApp connection established!');
 		}
 	});
 
